@@ -5,7 +5,7 @@ const otpTemplate = require("../email/template/otpTemplate");
 
 const otpSchema = new mongoose.Schema({
     otp: {
-        type: Number,
+        type: String,
         required: true,
         unique: true,
     },
@@ -14,12 +14,12 @@ const otpSchema = new mongoose.Schema({
         required: true,
         trim: true,
         lowercase: true,
-        match: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
+        match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     },
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 60 * 5, // The document will be automatically deleted after 5 minutes of its creation time
+        expires: 300, // The document will be automatically deleted after 5 minutes of its creation time
     },
 });
 

@@ -6,7 +6,14 @@ const sendCustomResponse = require("./middleware/customResponse.middleware");
 const connectDB = require("./config/connectDb");
 require("dotenv").config();
 const authRoutes = require("./routes/auth.routes");
-const { globalErrorHandler } = require("./middleware/globalErrorHandler");
+const {
+    globalErrorHandler,
+} = require("./middleware/globalErrorHandler.middleware");
+const {
+    isAuthenticated,
+    isAdmin,
+    isUser,
+} = require("./middleware/auth.middleware");
 // Connect Database
 connectDB();
 const app = express();
