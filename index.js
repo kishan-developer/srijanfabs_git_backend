@@ -22,6 +22,7 @@ app.use(express.json());
 app.use(cors());
 app.use(ratelimit);
 app.use(sendCustomResponse);
+// Routes For Login,Register,Send-Otp,Forgott-Password, Reset Password
 app.use("/api/v1/auth", authRoutes);
 // Simple test route
 app.get("/", (req, res) => {

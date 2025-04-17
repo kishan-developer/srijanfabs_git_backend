@@ -1,8 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
-const { role } = require("../constants/constants");
 const User = require("../model/User.model");
 require("dotenv").config();
+// Middleware for Check is user authenticated or not ?
 exports.isAuthenticated = asyncHandler(async (req, res, next) => {
     // Get Token
     const token =
@@ -23,6 +23,7 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
 
     // check is token is valid Or Not ? If Not Then Error
 });
+// Middleware for check is user is admin Or someone else if admin then go to next controller
 exports.isAdmin = asyncHandler(async (req, res, next) => {
     const user = req?.user ?? null;
 
@@ -54,6 +55,7 @@ exports.isAdmin = asyncHandler(async (req, res, next) => {
     next();
 });
 
+// Middleware for check is user is Customer(user) Or someone else if Customer(user) then go to next controller
 exports.isUser = asyncHandler(async (req, res, next) => {
     const user = req?.user ?? null;
 

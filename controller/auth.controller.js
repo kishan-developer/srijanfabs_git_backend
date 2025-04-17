@@ -8,7 +8,8 @@ const registrationSuccessTemplate = require("../email/template/registrationSucce
 const getSessionDetails = require("../utils/getSessionDetails");
 const loginAlertTemplate = require("../email/template/loginAlertTemplate");
 const getCurrentDateTime = require("../utils/getCurrentDateTime");
-
+const forgotPasswordTemplate = require("../email/template/fogotPasswordTemplate");
+require("dotenv").config();
 exports.sendOtp = asyncHandler(async (req, res) => {
     // get email
     const { email } = req.body;
@@ -98,6 +99,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
     return res.success("User created successfully.", newUser);
 });
 
+// User Login Handler
 exports.login = asyncHandler(async (req, res) => {
     const { password } = req.body;
     const email = req.body?.email.trim().toLowerCase();
@@ -135,4 +137,143 @@ exports.login = asyncHandler(async (req, res) => {
     );
     // send success response
     res.success(`Welcome ${user.firstName}`, token);
+});
+
+// Handler FOr Handle Change Password From Profile Of User After Login
+exports.changePassword = asyncHandler(async (req, res) => {
+    // get user old password new password confirm Password and token
+    const { oldPassword, password, confirmPassword } = req?.body;
+    if (!password || !confirmPassword || !oldPassword) {
+        return res.error("All fields are required", 404);
+    }
+
+    if (password !== confirmPassword) {
+        return res.error(
+            "Your New Password And Confirm Password Do Not Match.",
+            403
+        );
+    }
+    const userDetails = await User.findById(req?.user?._id);
+    if (!userDetails) {
+        return res.error("Something Went Wrong! Please Try Again.", 403);
+    }
+    // Check Is BOth Password Are Same Or NOt New - confirmPassword
+    const isPasswordMatch = await bcrypt.compare(
+        oldPassword,
+        userDetails.password
+    );
+
+    if (!isPasswordMatch) {
+        return res.error(
+            "Your Old Passoword And New Password Dose Not Match.",
+            403
+        );
+    }
+
+    const isNewPasswordSame = await bcrypt.compare(
+        password,
+        userDetails.password
+    );
+
+    // ALso Check Your NewPassword Should Not Be Your Old Password Again
+    if (isNewPasswordSame) {
+        return res.error("Old Password New Password Are Same.", 403);
+    }
+    // If Not Match Then  Save User Details
+    userDetails.password = password;
+    await userDetails.save();
+    //Send Response
+    return res.success("Password Changed Successfully", userDetails);
+});
+
+// Controller For handle Token Generation For Password Reset ->
+exports.forgotPasswordToken = asyncHandler(async (req, res) => {
+    // get user email find them
+    const { email } = req.body;
+    if (!email) {
+        return res.error("Please Provide Email.", 404);
+    }
+    // if user not exit then throw error
+    const userDetails = await User.findOne({ email });
+    // if user exit then send i token  to user on email
+    if (!userDetails) {
+        return res.error("User Dose Not Exit!", 403);
+    }
+    // set expiry time for reset token
+    const token = crypto.randomUUID();
+    userDetails.forgotPasswordToken = {
+        value: token,
+        expiresAt: new Date(Date.now() + 900000), // expires after 15 min
+    };
+    await userDetails.save();
+    // send email with reset token on email
+    const URL = process.env.FRONTEND_URL + token;
+    await mailSender(
+        email,
+        "Reset Password Link - Shreejan Fab",
+        forgotPasswordTemplate(URL)
+    );
+    return res.success("Reset link sent! Check your email.");
+    // send success response to admin
+});
+
+// Forgot Password Handler For Handle Passwordd Change By Token
+exports.forgotPassword = asyncHandler(async (req, res) => {
+    // get password and confirm password and token
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+    console.log(password, confirmPassword);
+    if (!token) {
+        return res.error("Something Went Wrong. Reset Token Is Missing", 403);
+    }
+    // check for password confirm password
+    if (!password || !confirmPassword) {
+        return res.error("All fields are required");
+    }
+    // check for token
+
+    // check is password and confirm password are same or not ?
+    if (password !== confirmPassword) {
+        return res.error("Password And Confirm Password Dose Not Match", 403);
+    }
+    // find user by token
+    const userDetails = await User.findOne({
+        "forgotPasswordToken.value": token,
+    });
+
+    if (!userDetails) {
+        return res.error("User Not Found!. Please Try Again", 403);
+    }
+    const isPreviousPassword = await bcrypt.compare(
+        password,
+        userDetails.password
+    );
+    // before saving new password check is new password or password are not Same
+    if (isPreviousPassword) {
+        return res.error(
+            "Your Old Password And New Password Are Same. Try Another",
+            403
+        );
+    }
+    // check is token is valid or not ? I Mean Expired or not
+    if (userDetails.forgotPasswordToken.value !== token) {
+        return res.error(
+            "Token Not Matched. Please Generate New Or Try Again.",
+            401
+        );
+    }
+
+    if (!(userDetails.forgotPasswordToken.expiresAt > Date.now())) {
+        return res.error(
+            "Reset link Is Expired! Please Generate New Link",
+            400
+        );
+    }
+
+    // if token is valida new passowrd previuos passowrd are not same then save new password
+    userDetails.password = password;
+    userDetails.forgotPasswordToken.value = null;
+    userDetails.forgotPasswordToken.expiresAt = null;
+    await userDetails.save();
+    return res.success("Password Changed Successfully.");
 });

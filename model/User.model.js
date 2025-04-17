@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const userSchema = new mongoose.Schema(
     {
+        avatar: {
+            type: String,
+        },
         firstName: {
             type: String,
             required: true,
@@ -13,6 +16,9 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             lowercase: true,
+        },
+        dob: {
+            type: String,
         },
         email: {
             type: String,
@@ -35,6 +41,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+
         role: {
             type: String,
             enum: ["user", "admin"],
@@ -48,9 +55,14 @@ const userSchema = new mongoose.Schema(
                 country: { type: String, required: true },
             },
         ],
+
         isAdmin: {
             type: Boolean,
             default: false,
+        },
+        forgotPasswordToken: {
+            value: { type: String },
+            expiresAt: { type: Date },
         },
     },
     { timestamps: true }
