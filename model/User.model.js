@@ -2,6 +2,38 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const addressSchema = new mongoose.Schema(
+    {
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        postalCode: { type: String, required: true },
+        country: { type: String, required: true },
+    },
+    { timestamps: true }
+);
+
+const cartSchema = new mongoose.Schema({
+    items: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+            quantity: {
+                type: Number,
+                required: true,
+                default: 1,
+            },
+        },
+    ],
+    totalPrice: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
+});
 const userSchema = new mongoose.Schema(
     {
         avatar: {
@@ -41,20 +73,13 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-
         role: {
             type: String,
             enum: ["user", "admin"],
             default: "user",
         },
-        shippingAddress: [
-            {
-                address: { type: String, required: true },
-                city: { type: String, required: true },
-                postalCode: { type: String, required: true },
-                country: { type: String, required: true },
-            },
-        ],
+        shippingAddress: [addressSchema],
+        cart: [cartSchema],
 
         isAdmin: {
             type: Boolean,

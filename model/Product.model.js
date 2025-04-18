@@ -15,7 +15,8 @@ const productSchema = new mongoose.Schema(
             required: true,
         },
         category: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
             required: true,
         },
         stock: {
@@ -23,20 +24,52 @@ const productSchema = new mongoose.Schema(
             required: true,
             default: 0,
         },
-        image: [
-            {
-                type: String,
-                required: true,
+        images: {
+            type: [String], // This means the field is an array of strings
+            required: true,
+            validate: {
+                validator: function (arr) {
+                    return Array.isArray(arr) && arr.length > 0; // Check For This should Not Be EMpty
+                },
+                message: "At least one image is required",
             },
-        ],
+        },
+
+        fabric: {
+            type: String,
+            required: true,
+        },
+        technique: {
+            type: String,
+            required: true,
+        },
+        color: {
+            type: String,
+            required: true,
+        },
+        weight: {
+            type: String,
+            required: true,
+        },
+        assurance: {
+            type: String,
+            required: true,
+        },
+        hsnCode: {
+            type: String,
+            required: true,
+        },
         reviews: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Review",
             },
-        ], // Store review IDs for each product
-    },
+        ],
+    }, // Store review IDs for each product
     { timestamps: true }
 );
 // Create Vertualt Key : Rating And calculate
+productSchema.virtual("rating").get(function () {
+    // Calculate the average rating from the reviews
+});
 module.exports = mongoose.model("Product", productSchema);
