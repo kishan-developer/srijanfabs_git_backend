@@ -11,6 +11,7 @@ const {
     updateProduct,
     deleteProduct,
 } = require("../../controller/admin/product.controller");
-productRouter.post("/product/create", isAuthenticated, isAdmin, createProduct);
+productRouter.post("/create", createProduct);
+productRouter.put("/update/:id", updateProduct);
 
 module.exports = productRouter;

@@ -1,7 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const imageUplaoder = require("../../utils/imageUpload.utils");
 const Product = require("../../model/Product.model");
-// Pending
+const sanitizePayload = require("../../utils/sanitizePayload");
+const { PRODUCT_ALLOWED_FIELDS } = require("../../constants/constants");
+
 const createProduct = asyncHandler(async (req, res) => {
     const {
         name,
@@ -51,7 +53,6 @@ const createProduct = asyncHandler(async (req, res) => {
     ) {
         return res.error("All fields are required.", 400);
     }
-    // Check Is There Is ANy Image Larger than 10mb if have then throw error
 
     const productPayload = {
         name,
@@ -72,9 +73,40 @@ const createProduct = asyncHandler(async (req, res) => {
     const product = await Product.create(productPayload);
     return res.success("Product Created Successfully.", product);
 });
+const updateProduct = asyncHandler(async (req, res) => {
+    // get product data
+    const _id = req.params?.id || req.body?.id;
+    let productPayload = req.body ?? null;
+    if (!_id) {
+        return res.error("Product Id is required", 400);
+    }
+    // Check Is Payload Is Not Empty
+    if (!productPayload || Object.keys(productPayload).length == 0) {
+        return res.error("Please provide fields to update", 400);
+    }
+
+    const sanitizedPayload = sanitizePayload(
+        productPayload,
+        PRODUCT_ALLOWED_FIELDS
+    );
+    if (Object.keys(sanitizedPayload).length == 0) {
+        return res.error("All input values are either invalid or empty.", 404);
+    }
+    const updatedProduct = await Product.findByIdAndUpdate(
+        _id,
+        sanitizedPayload,
+        {
+            new: true,
+            runValidators: true,
+        }
+    );
+    if (!updatedProduct) {
+        return res.error("Product not found or update failed.", 404);
+    }
+    return res.success("Product Updated Successfully", updatedProduct);
+});
 const getAllProducts = asyncHandler(async (req, res) => {});
 const getProduct = asyncHandler(async (req, res) => {});
-const updateProduct = asyncHandler(async (req, res) => {});
 const deleteProduct = asyncHandler(async (req, res) => {});
 
 module.exports = {

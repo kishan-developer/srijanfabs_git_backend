@@ -29,6 +29,7 @@
         "express-fileupload": "^1.5.1",
         "express-rate-limit": "^7.5.0",
         "geoip-lite": "^1.4.10",
+        "helmet": "^8.1.0",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.13.2",
         "nodemailer": "^6.10.1",
