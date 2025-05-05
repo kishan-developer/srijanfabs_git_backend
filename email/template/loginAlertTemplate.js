@@ -11,7 +11,7 @@ function loginAlertTemplate(
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Login Alert - Shreejan Fab</title>
+      <title>Login Alert - Srijan Fabs</title>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
         integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
       <style>
@@ -139,7 +139,7 @@ function loginAlertTemplate(
         <div class="container">
           <!-- Header -->
           <div class="header">
-            <h1>Shreejan Fab</h1>
+            <h1>Srijan Fabs</h1>
             <p>Login Activity Alert</p>
           </div>
           <!-- Content -->
@@ -158,13 +158,13 @@ function loginAlertTemplate(
           <div class="footer">
             <div class="contact-info">
               <i class="fa-solid fa-envelope"></i>
-              <a href="mailto:support@shreejanfab.com">support@shreejanfab.com</a>
+              <a href="mailto:support@SrijanFabs.com">support@SrijanFabs.com</a>
             </div>
             <div class="contact-info">
               <i class="fa-solid fa-phone"></i>
               +91 98765 43210
             </div>
-            <p>© ${new Date().getFullYear()} Shreejan Fab. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Srijan Fabs. All rights reserved.</p>
           </div>
         </div>
       </div>

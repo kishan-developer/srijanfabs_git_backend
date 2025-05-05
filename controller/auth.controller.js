@@ -91,7 +91,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
     // Send registration success email
     await mailSender(
         newUser.email,
-        "Welcome to Shreejan Fab – Your Registration is Complete!",
+        "Welcome to Srijan Fabs – Your Registration is Complete!",
         registrationSuccessTemplate(`${newUser.firstName} ${newUser.lastName}`)
     );
 
@@ -210,7 +210,7 @@ exports.forgotPasswordToken = asyncHandler(async (req, res) => {
     const URL = process.env.FRONTEND_URL + token;
     await mailSender(
         email,
-        "Reset Password Link - Shreejan Fab",
+        "Reset Password Link - Srijan Fabs",
         forgotPasswordTemplate(URL)
     );
     return res.success("Reset link sent! Check your email.");
