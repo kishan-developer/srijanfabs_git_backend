@@ -135,8 +135,10 @@ exports.login = asyncHandler(async (req, res) => {
             getCurrentDateTime()
         )
     );
-    // send success response
-    res.success(`Welcome ${user.firstName}`, token);
+    const userData = user.toObject();
+    delete userData.password; // Don't expose hashed password
+    delete userData.__v;
+    res.success(`Welcome ${user.firstName}`, { user: userData, token });
 });
 
 // Handler FOr Handle Change Password From Profile Of User After Login
