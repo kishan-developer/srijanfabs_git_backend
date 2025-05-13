@@ -7,19 +7,18 @@ const orderSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
-        orderItems: [
-            {
-                product: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Product",
-                    required: true,
-                },
-                quantity: {
-                    type: Number,
-                    required: true,
-                },
+        orderItem: {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
             },
-        ],
+            quantity: {
+                type: Number,
+                required: true,
+            },
+        },
+
         shippingAddress: {
             address: { type: String, required: true },
             city: { type: String, required: true },
@@ -30,7 +29,7 @@ const orderSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        totalPrice: {
+        price: {
             type: Number,
             required: true,
         },

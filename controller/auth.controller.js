@@ -138,6 +138,13 @@ exports.login = asyncHandler(async (req, res) => {
     const userData = user.toObject();
     delete userData.password; // Don't expose hashed password
     delete userData.__v;
+    // set Cookies to frontend
+    res.cookie("token", token, {
+        httpOnly: true, // Cannot be accessed by JavaScript
+        secure: false, // Send only over HTTPS
+        sameSite: "Strict", // Prevent CSRF
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
     res.success(`Welcome ${user.firstName}`, { user: userData, token });
 });
 
