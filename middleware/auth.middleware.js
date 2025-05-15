@@ -4,20 +4,27 @@ const User = require("../model/User.model");
 require("dotenv").config();
 // Middleware for Check is user authenticated or not ?
 exports.isAuthenticated = asyncHandler(async (req, res, next) => {
-    // Get Token
     const token =
+        req.cookies?.token ||
         req.body?.token ||
-        req.header("Authorization")?.replace("Bearer ", "") ||
-        req.cookies?.token;
+        req.header("Authorization")?.replace("Bearer ", "");
     // If Not Token Then Unauthorised
     if (!token) {
         return res.error("Token Missing", 401);
     }
+
     try {
-        const decode = await jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decode;
+        const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded?._id).select(
+            "-password -refreshToken"
+        );
+        if (!user) {
+            return res.error("No User Found", 401);
+        }
+        req.user = user;
         next();
     } catch (error) {
+        console.log(error.message);
         return res.error("Invalid Token !", 401);
     }
 

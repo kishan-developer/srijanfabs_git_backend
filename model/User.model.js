@@ -85,6 +85,9 @@ const userSchema = new mongoose.Schema(
             value: { type: String },
             expiresAt: { type: Date },
         },
+        refreshToken: {
+            type: String,
+        },
     },
     { timestamps: true }
 );
@@ -100,12 +103,21 @@ userSchema.methods.generateToken = function () {
     return jwt.sign(
         {
             _id: this._id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "15m" }
+    );
+};
+userSchema.methods.generateRefreshToken = function name() {
+    return jwt.sign(
+        {
+            _id: this._id,
             isAdmin: this.isAdmin,
             email: this.email,
             role: this.role,
         },
-        process.env.JWT_SECRET,
-        { expiresIn: "24h" }
+        process.env.JWT_REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
     );
 };
 const User = mongoose.model("User", userSchema);

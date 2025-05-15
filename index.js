@@ -1,5 +1,5 @@
 const express = require("express");
-
+const cookieParser = require("cookie-parser");
 const fileUplaod = require("express-fileupload");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -19,11 +19,16 @@ const router = require("./routes/index.routes");
 connectDB(); // connect Database
 connectCloudinary(); // connect cloudinary
 const app = express();
-
+app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(
+    cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+    })
+);
 // Limit repeated requests (rate limiting)
-app.use(ratelimit);
+// app.use(ratelimit);
 // Secure HTTP headers to protect your app
 app.use(helmet());
 // Sanitize input to prevent NoSQL injection attacks

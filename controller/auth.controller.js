@@ -9,7 +9,19 @@ const getSessionDetails = require("../utils/getSessionDetails");
 const loginAlertTemplate = require("../email/template/loginAlertTemplate");
 const getCurrentDateTime = require("../utils/getCurrentDateTime");
 const forgotPasswordTemplate = require("../email/template/fogotPasswordTemplate");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
+
+const generateTokenAndRefereshTokens = asyncHandler(async (userId) => {
+    const user = await User.findById(userId);
+    const token = user.generateToken();
+    const refreshToken = user.generateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { token, refreshToken };
+});
+
 exports.sendOtp = asyncHandler(async (req, res) => {
     // get email
     const { email } = req.body;
@@ -121,7 +133,10 @@ exports.login = asyncHandler(async (req, res) => {
         return res.error("Password dose not match", 403);
     }
     // Generate Token For User
-    const token = await user.generateToken();
+    const { token, refreshToken } = await generateTokenAndRefereshTokens(
+        user._id
+    );
+
     // send login alert to user
     const session = getSessionDetails(req);
     await mailSender(
@@ -138,14 +153,20 @@ exports.login = asyncHandler(async (req, res) => {
     const userData = user.toObject();
     delete userData.password; // Don't expose hashed password
     delete userData.__v;
-    // set Cookies to frontend
-    res.cookie("token", token, {
-        httpOnly: true, // Cannot be accessed by JavaScript
-        secure: false, // Send only over HTTPS
-        sameSite: "Strict", // Prevent CSRF
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    delete userData.refreshToken;
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+    res.cookie("token", token, options).cookie(
+        "refreshToken",
+        refreshToken,
+        options
+    );
+    return res.success(`Welcome ${user.firstName}`, {
+        user: userData,
+        token,
     });
-    res.success(`Welcome ${user.firstName}`, { user: userData, token });
 });
 
 // Handler FOr Handle Change Password From Profile Of User After Login
@@ -162,9 +183,14 @@ exports.changePassword = asyncHandler(async (req, res) => {
             403
         );
     }
+    console.log(req.user._id);
     const userDetails = await User.findById(req?.user?._id);
+
     if (!userDetails) {
-        return res.error("Something Went Wrong! Please Try Again.", 403);
+        return res.error(
+            "User Not Found Something Went Wrong! Please Try Again.",
+            403
+        );
     }
     // Check Is BOth Password Are Same Or NOt New - confirmPassword
     const isPasswordMatch = await bcrypt.compare(
@@ -285,4 +311,80 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     userDetails.forgotPasswordToken.expiresAt = null;
     await userDetails.save();
     return res.success("Password Changed Successfully.");
+});
+
+exports.logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1, // this removes the field from document
+            },
+        },
+        {
+            new: true,
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    res.clearCookie("token", options).clearCookie("refreshToken", options);
+    res.success("User logged Out");
+});
+
+exports.regenerateToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken =
+        req?.cookies?.refreshToken || req?.body?.refreshToken;
+    console.log("incoming refreshToken", incomingRefreshToken);
+    if (!incomingRefreshToken) {
+        return res.error("unauthorized request", 401);
+    }
+
+    const decodedToken = jwt.verify(
+        incomingRefreshToken,
+        process.env.JWT_REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+        return res.error("Invalid refresh token", 401);
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+        return res.error("Refresh token is expired or used", 401);
+    }
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    const { token, refreshToken: newRefreshToken } =
+        await generateTokenAndRefereshTokens(user._id);
+
+    res.cookie("token", token, options).cookie(
+        "refreshToken",
+        newRefreshToken,
+        options
+    );
+    return res.success("Access token refreshed", token);
+});
+
+exports.getUserDetails = asyncHandler(async (req, res) => {
+    const userId = req?.user?._id || req.body.userId;
+    if (!userId) {
+        return res.error("Unauthorised Access", 401);
+    }
+
+    const userDetails = await User.findById(userId).select(
+        "-password -refreshToken"
+    );
+    if (!userDetails) {
+        return res.error("Unauthorised Acces User Not Found", 401);
+    }
+    return res.success("User Fetched Successfully..", userDetails);
 });
