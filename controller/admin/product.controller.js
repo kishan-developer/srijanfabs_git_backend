@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const imageUplaoder = require("../../utils/imageUpload.utils");
 const Product = require("../../model/Product.model");
+const Category = require("../../model/Category.model");
 const sanitizePayload = require("../../utils/sanitizePayload");
 const { PRODUCT_ALLOWED_FIELDS } = require("../../constants/constants");
 
@@ -20,6 +21,7 @@ const createProduct = asyncHandler(async (req, res) => {
         reviews,
         images,
     } = req.body;
+
     console.log(
         name,
         description,
@@ -51,7 +53,7 @@ const createProduct = asyncHandler(async (req, res) => {
         !reviews ||
         !images
     ) {
-        return res.error("All fields are required.", 400);
+        return res.error(`All fields are required. ${req.body}`, 400);
     }
 
     const productPayload = {
@@ -71,6 +73,9 @@ const createProduct = asyncHandler(async (req, res) => {
     };
     // create new product
     const product = await Product.create(productPayload);
+    const updatedCategory = await Category.findByIdAndUpdate(category, {
+        $push: { products: product._id },
+    });
     return res.success("Product Created Successfully.", product);
 });
 const updateProduct = asyncHandler(async (req, res) => {
@@ -105,14 +110,22 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
     return res.success("Product Updated Successfully", updatedProduct);
 });
-const getAllProducts = asyncHandler(async (req, res) => {});
-const getProduct = asyncHandler(async (req, res) => {});
-const deleteProduct = asyncHandler(async (req, res) => {});
+
+const deleteProduct = asyncHandler(async (req, res) => {
+    const _id = req.body?.id || req.params.id;
+    if (!_id) {
+        return res.error("Products Id Are Required", 400);
+    }
+    const deletedProduct = await Product.findByIdAndDelete(_id);
+    if (!deletedProduct) {
+        return res.error("Product Not Found", 404);
+    }
+    return res.success("Product Deleted Successfully", deletedProduct);
+});
 
 module.exports = {
     createProduct,
-    getAllProducts,
-    getProduct,
+
     updateProduct,
     deleteProduct,
 };

@@ -25,7 +25,7 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
         next();
     } catch (error) {
         console.log(error.message);
-        return res.error("Invalid Token !", 401);
+        return res.error("Something Went Wrong !", 401);
     }
 
     // check is token is valid Or Not ? If Not Then Error
@@ -33,14 +33,14 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
 // Middleware for check is user is admin Or someone else if admin then go to next controller
 exports.isAdmin = asyncHandler(async (req, res, next) => {
     const user = req?.user ?? null;
-
+    console.log("User Data ->", user);
     // Step 1: Check if token attached user info
     if (!user) {
         return res.error("Unauthorized access. User not authenticated.", 401);
     }
 
     // Step 2: Check token claims admin access
-    if (!user.isAdmin) {
+    if (!user.isAdmin || user.role !== "admin") {
         return res.error("Access denied. Admins only.", 403);
     }
 

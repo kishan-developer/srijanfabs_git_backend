@@ -332,7 +332,7 @@ exports.logoutUser = asyncHandler(async (req, res) => {
     };
 
     res.clearCookie("token", options).clearCookie("refreshToken", options);
-    res.success("User logged Out");
+    return res.success("User logged Out");
 });
 
 exports.regenerateToken = asyncHandler(async (req, res) => {
@@ -379,7 +379,6 @@ exports.getUserDetails = asyncHandler(async (req, res) => {
     if (!userId) {
         return res.error("Unauthorised Access", 401);
     }
-
     const userDetails = await User.findById(userId).select(
         "-password -refreshToken"
     );
