@@ -50,10 +50,9 @@ const createProduct = asyncHandler(async (req, res) => {
         !weight ||
         !assurance ||
         !hsnCode ||
-        !reviews ||
         !images
     ) {
-        return res.error(`All fields are required. ${req.body}`, 400);
+        return res.error(`All fields are required.`, 400);
     }
 
     const productPayload = {
@@ -73,10 +72,11 @@ const createProduct = asyncHandler(async (req, res) => {
     };
     // create new product
     const product = await Product.create(productPayload);
+    const allProducts = await Product.find({});
     const updatedCategory = await Category.findByIdAndUpdate(category, {
         $push: { products: product._id },
     });
-    return res.success("Product Created Successfully.", product);
+    return res.success("Product Created Successfully.", allProducts);
 });
 const updateProduct = asyncHandler(async (req, res) => {
     // get product data
@@ -108,7 +108,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (!updatedProduct) {
         return res.error("Product not found or update failed.", 404);
     }
-    return res.success("Product Updated Successfully", updatedProduct);
+    const allProducts = await Product.find({});
+    return res.success("Product Updated Successfully", allProducts);
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {

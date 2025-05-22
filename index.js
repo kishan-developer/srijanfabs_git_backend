@@ -48,22 +48,6 @@ app.get("/", (req, res) => {
     return res.success("Welcome! Test route is working");
 });
 
-app.post("/upload", async (req, res) => {
-    const images = req.files?.file ?? null;
-    if (!images) {
-        return res.error("Please Upload File First", 400);
-    }
-    if (Array.isArray(images)) {
-        for (const image of images) {
-            if (image.size > 10 * 1024 * 1024) {
-                return res.error("Image should not be larger than 10MB", 400);
-            }
-        }
-    }
-    const result = await imageUploader(images);
-    return res.success("Images Uploaded Successfully", result);
-});
-
 app.use(notFound);
 app.use(globalErrorHandler);
 const PORT = process.env.PORT || 8080;
