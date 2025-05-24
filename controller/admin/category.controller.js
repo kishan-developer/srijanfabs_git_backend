@@ -4,14 +4,14 @@ const sanitizePayload = require("../../utils/sanitizePayload");
 const { CATEGORY_ALLOWED_FIELDS } = require("../../constants/constants");
 const createCategory = asyncHandler(async (req, res) => {
     // get data from body;
-    const { name, description, image } = req.body;
+    const { name, description } = req.body;
 
     // Validate data;
-    if (!name || !description || !image)
-        return res.error("All fields are required", 400);
+    if (!name || !description) return res.error("All fields are required", 400);
     // create New Category;
-    const newCategory = await Category.create({ name, description, image });
-    return res.success("Category Created Successfully", newCategory);
+    const newCategory = await Category.create({ name, description });
+    const allUpdatedCategories = await Category.find({});
+    return res.success("Category Created Successfully", allUpdatedCategories);
 });
 
 const updateCategory = asyncHandler(async (req, res) => {
@@ -36,7 +36,8 @@ const updateCategory = asyncHandler(async (req, res) => {
     if (!updatedCategory) {
         return res.error("Category not found or update failed.", 404);
     }
-    return res.success("Category Updated Successfully", updatedCategory);
+    const allUpdatedCategories = await Category.find({});
+    return res.success("Category Updated Successfully", allUpdatedCategories);
 });
 const deleteCategory = asyncHandler(async (req, res) => {
     const _id = req.params?.id || req.body?.id;

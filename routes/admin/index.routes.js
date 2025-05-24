@@ -6,8 +6,14 @@ const {
     isAuthenticated,
     isAdmin,
 } = require("../../middleware/auth.middleware");
+
+const userRouter = require("./user.routes");
+const { getOverview } = require("../../controller/admin/overview.controller");
+const orderRouter = require("./order.routes");
 adminRouter.use(isAuthenticated, isAdmin);
 adminRouter.use("/product", productRoutes);
 adminRouter.use("/category", categoryRoutes);
-
+adminRouter.use("/user", userRouter);
+adminRouter.use("/orders", orderRouter);
+adminRouter.get("/overview", getOverview);
 module.exports = adminRouter;
