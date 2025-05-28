@@ -2,7 +2,7 @@ const Product = require("../../../model/Product.model");
 
 const asyncHandler = require("express-async-handler");
 const getAllProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find({});
+    const products = await Product.find({}).populate("category").exec();
     return res.success("Products Fetched Successfully.", products);
 });
 
