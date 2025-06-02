@@ -16,6 +16,21 @@ const cartSchema = new mongoose.Schema({
                 required: true,
                 default: 1,
             },
+            finalPrice: {
+                type: Number,
+                required: true,
+                default: 0,
+            },
+            withCustomization: {
+                type: Boolean,
+                required: true,
+                default: false,
+            },
+            totalPrice: {
+                type: Number,
+                required: true,
+                default: 0,
+            },
         },
     ],
     totalPrice: {
@@ -24,6 +39,18 @@ const cartSchema = new mongoose.Schema({
         default: 0,
     },
 });
+const wishListSchema = new mongoose.Schema({
+    items: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+        },
+    ],
+});
+
 const userSchema = new mongoose.Schema(
     {
         avatar: {
@@ -76,7 +103,7 @@ const userSchema = new mongoose.Schema(
             },
         ],
         cart: [cartSchema],
-
+        wishList: [wishListSchema],
         isAdmin: {
             type: Boolean,
             default: false,
