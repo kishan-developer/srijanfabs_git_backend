@@ -10,10 +10,12 @@ const {
     getCategoryById,
 } = require("../controller/public/product/category.controller");
 const imageUploader = require("../utils/imageUpload.utils");
+const userRoutes = require("./user/index.routes");
 
 const router = express.Router();
 router.use("/auth", authRoutes);
 router.use("/admin", adminRoutes);
+router.use("/user", userRoutes);
 // Public routes
 // Products
 router.get("/products", getAllProducts);
@@ -23,7 +25,6 @@ router.get("/categories", getAllCategories);
 router.get("/categories/:id", getCategoryById);
 // Upload ->
 router.post("/upload", async (req, res) => {
- 
     const images = req.files?.files ?? null;
     if (!images) {
         return res.error("Please Upload File First", 400);

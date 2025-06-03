@@ -382,6 +382,7 @@ exports.getUserDetails = asyncHandler(async (req, res) => {
     const userDetails = await User.findById(userId).select(
         "-password -refreshToken"
     );
+
     if (!userDetails) {
         return res.error("Unauthorised Acces User Not Found", 401);
     }

@@ -102,7 +102,7 @@ const userSchema = new mongoose.Schema(
                 required: true,
             },
         ],
-        cart: [cartSchema],
+        cart: cartSchema,
         wishList: [wishListSchema],
         isAdmin: {
             type: Boolean,
