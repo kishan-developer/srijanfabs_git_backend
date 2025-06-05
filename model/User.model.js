@@ -39,17 +39,6 @@ const cartSchema = new mongoose.Schema({
         default: 0,
     },
 });
-const wishListSchema = new mongoose.Schema({
-    items: [
-        {
-            product: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Product",
-                required: true,
-            },
-        },
-    ],
-});
 
 const userSchema = new mongoose.Schema(
     {
@@ -103,7 +92,13 @@ const userSchema = new mongoose.Schema(
             },
         ],
         cart: cartSchema,
-        wishList: [wishListSchema],
+        wishList: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+        ],
         isAdmin: {
             type: Boolean,
             default: false,

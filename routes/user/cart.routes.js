@@ -9,7 +9,7 @@ const {
 const cartRouter = express.Router();
 cartRouter.get("/:userId", getCart);
 cartRouter.post("/add", addToCart);
-cartRouter.post("/:userId/:productId", removeFromCart);
+cartRouter.post("/remove", removeFromCart);
 cartRouter.post("/merge", mergeCart);
 cartRouter.post("/update-quantity", updateQuantity);
 module.exports = cartRouter;

@@ -4,7 +4,7 @@
 // merge Cart
 
 const express = require("express");
-const cartRouter = express.Router();
+
 const User = require("../../../model/User.model");
 
 // ------------------------
@@ -89,10 +89,23 @@ exports.addToCart = async (req, res) => {
         );
 
         await user.save();
-        res.status(200).json({
-            message: "Item added to cart",
-            cart: user.cart,
+        const updatedUser = await User.findById(userId).populate(
+            "cart.items.product"
+        );
+
+        // Flatten cart items
+        const flattenedCartItems = updatedUser.cart.items.map((item) => {
+            const product = item.product.toObject(); // Convert Mongoose document to plain object
+            return {
+                ...product, // Flatten product fields
+                _id: item._id, // Retain the cart item _id
+                finalPrice: item.finalPrice,
+                quantity: item.quantity,
+                totalPrice: item.totalPrice,
+                withCustomization: item.withCustomization,
+            };
         });
+        res.status(200).json(flattenedCartItems);
     } catch (err) {
         res.status(500).json({
             message: "Failed to add to cart",
@@ -200,7 +213,7 @@ exports.mergeCart = async (req, res) => {
 
 exports.updateQuantity = async (req, res) => {
     const { userId, productId, withCustomization, type } = req.body;
-
+    console.log("TYPE OF CHANGE ->", type);
     if (!userId || !productId || !type)
         return res.status(400).json({ message: "Missing required fields" });
 

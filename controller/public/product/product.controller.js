@@ -11,7 +11,7 @@ const getProductById = asyncHandler(async (req, res) => {
     if (!_id) {
         return res.error("Products Id Are Required", 400);
     }
-    const product = await Product.findById(_id);
+    const product = await Product.findById(_id).populate("category").exec();
     if (!product) {
         return res.error("Product Not Found", 404);
     }
