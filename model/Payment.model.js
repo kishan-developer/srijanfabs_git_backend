@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
 const paymentSchema = new mongoose.Schema({
-    order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    amount: Number,
-    method: String, // e.g., 'Credit Card', 'PayPal' ,'UPI'
-    status: {
+    razorpay_payment_id: {
         type: String,
-        enum: ["Success", "Failed", "Pending"],
-        default: "Pending",
+        required: true,
     },
-    transactionId: String,
-    paidAt: { type: Date },
+    razorpay_order_id: {
+        type: String,
+        required: true,
+    },
+    razorpay_signature: {
+        type: String,
+        required: true,
+    },
 });
 
 module.exports = mongoose.model("Payment", paymentSchema);

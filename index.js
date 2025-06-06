@@ -27,6 +27,11 @@ const allowedOrigins = [
 
 app.use(express.json());
 app.use(
+    express.urlencoded({
+        extended: true,
+    })
+);
+app.use(
     cors({
         origin: function (origin, callback) {
             if (!origin || allowedOrigins.includes(origin)) {
