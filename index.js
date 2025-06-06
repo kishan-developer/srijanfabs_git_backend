@@ -20,9 +20,21 @@ connectDB(); // connect Database
 connectCloudinary(); // connect cloudinary
 const app = express();
 app.use(cookieParser());
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://shreejan-fab-frontend.vercel.app",
+];
+
 app.use(express.json());
 app.use(
     cors({
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
         credentials: true,
     })
 );
