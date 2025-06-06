@@ -11,11 +11,13 @@ const {
 } = require("../controller/public/product/category.controller");
 const imageUploader = require("../utils/imageUpload.utils");
 const userRoutes = require("./user/index.routes");
+const paymentRoutes = require("./payment.routes");
 
 const router = express.Router();
 router.use("/auth", authRoutes);
 router.use("/admin", adminRoutes);
 router.use("/user", userRoutes);
+router.use("/payment", paymentRoutes);
 // Public routes
 // Products
 router.get("/products", getAllProducts);
