@@ -305,7 +305,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
         );
     }
 
-    // if token is valida new passowrd previuos passowrd are not same then save new password
+    // if token is valid new passowrd previuos passowrd are not same then save new password
     userDetails.password = password;
     userDetails.forgotPasswordToken.value = null;
     userDetails.forgotPasswordToken.expiresAt = null;

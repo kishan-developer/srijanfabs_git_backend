@@ -3,40 +3,56 @@ const Order = require("../../model/Order.model");
 const Category = require("../../model/Category.model");
 const Payment = require("../../model/Payment.model");
 const User = require("../../model/User.model");
-
+const Review = require("../../model/Review.model");
 const getOverview = async (req, res) => {
     try {
-        // Fetch low stock products (e.g., stock < 10)
-        const lowStockProducts = await Product.find({ stock: { $lt: 10 } });
+        // 1) lowStockProducts: products with stock <= 5
+        const lowStockProducts = await Product.find({ stock: { $lte: 5 } })
+            .select("name stock")
+            .lean();
 
-        // Fetch total revenue from completed payments
-        const totalRevenue = await Payment.aggregate([
-            { $match: { status: "Success" } },
-            { $group: { _id: null, total: { $sum: "$amount" } } },
+        // 2) totalRevenue: sum of totalAmount for orders paymentStatus = "Paid"
+        const revenueResult = await Order.aggregate([
+            { $match: { paymentStatus: "Paid" } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+        ]);
+        const totalRevenue = revenueResult[0]?.total || 0;
+
+        // 3) pendingOrders: orders with paymentStatus = "Pending"
+        const pendingOrders = await Order.find({ paymentStatus: "Pending" })
+            .select("_id createdAt")
+            .lean();
+
+        // 4) averageRating: average of all review ratings
+        const ratingResult = await Review.aggregate([
+            { $group: { _id: null, avgRating: { $avg: "$rating" } } },
+        ]);
+        const averageRating = Number(
+            (ratingResult[0]?.avgRating || 0).toFixed(2)
+        );
+
+        // 5) totalProducts: count of all products
+        const totalProducts = await Product.countDocuments();
+
+        // 6) activeUsers: count of users who have at least one item in cart
+        const activeUsers = await User.countDocuments({
+            "cart.items.0": { $exists: true },
+        });
+
+        // 7) orderStats: breakdown by deliveryStatus
+        const orderStats = await Order.aggregate([
+            { $group: { _id: "$deliveryStatus", count: { $sum: 1 } } },
         ]);
 
-        // Fetch pending orders
-        const pendingOrders = await Order.find({ deliveryStatus: "Pending" });
-
-        // Fetch products for calculating the average rating
-        const products = await Product.find({});
-        const averageRating =
-            products.reduce((sum, product) => {
-                const ratings = product.reviews.length;
-                return sum + (ratings > 0 ? product.rating : 0);
-            }, 0) / products.length;
-
-        // Fetch top-selling products (sorted by quantity sold)
-        const topSellingProducts = await Order.aggregate([
+        // 8) topSellingProducts: sum quantities per product across all orders, top 5
+        const topSellingAgg = await Order.aggregate([
             { $unwind: "$items" },
             {
                 $group: {
                     _id: "$items.product",
-                    totalSales: { $sum: "$items.quantity" },
+                    sales: { $sum: "$items.quantity" },
                 },
             },
-            { $sort: { totalSales: -1 } },
-            { $limit: 5 }, // Top 5 selling products
             {
                 $lookup: {
                     from: "products",
@@ -46,69 +62,24 @@ const getOverview = async (req, res) => {
                 },
             },
             { $unwind: "$product" },
-            { $project: { name: "$product.name", sales: "$totalSales" } },
+            { $project: { _id: 0, name: "$product.name", sales: 1 } },
+            { $sort: { sales: -1 } },
+            { $limit: 5 },
         ]);
 
-        // Fetch category stock (number of items in each category)
-        const categoryStock = await Category.aggregate([
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "_id",
-                    foreignField: "category",
-                    as: "products",
-                },
-            },
-            { $project: { name: 1, stock: { $sum: "$products.stock" } } },
-        ]);
-
-        // Fetch total number of products
-        const totalProducts = await Product.countDocuments();
-
-        // Fetch active users (users who have made a purchase in the last 30 days)
-        const activeUsers = await User.aggregate([
-            {
-                $lookup: {
-                    from: "orders",
-                    localField: "_id",
-                    foreignField: "user",
-                    as: "userOrders",
-                },
-            },
-            {
-                $match: {
-                    "userOrders.date": {
-                        $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                    },
-                },
-            },
-        ]);
-
-        // Fetch order status breakdown (e.g., Pending, Delivered, Canceled)
-        const orderStats = await Order.aggregate([
-            {
-                $group: {
-                    _id: "$deliveryStatus",
-                    count: { $sum: 1 },
-                },
-            },
-        ]);
-
-        // Return the aggregated data to the client
         res.json({
             lowStockProducts,
-            totalRevenue: totalRevenue[0]?.total || 0,
+            totalRevenue,
             pendingOrders,
-            averageRating: averageRating.toFixed(1),
-            topSellingProducts,
-            categoryStock,
+            averageRating,
             totalProducts,
-            activeUsers: activeUsers.length,
+            activeUsers,
             orderStats,
+            topSellingProducts: topSellingAgg,
         });
     } catch (err) {
-        console.error("Error fetching overview data:", err);
-        res.status(500).json({ error: "Internal server error" });
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
     }
 };
 

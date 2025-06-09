@@ -99,3 +99,40 @@ exports.paymentVerificationHandler = async (req, res) => {
         );
     }
 };
+
+exports.updatePaymentStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { paymentStatus } = req.body;
+
+        // Validate
+        if (!["Pending", "Paid", "Failed"].includes(paymentStatus)) {
+            return res.status(400).json({ message: "Invalid payment status" });
+        }
+
+        // Find order
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        // Update fields
+        order.paymentStatus = paymentStatus;
+        if (paymentStatus === "Paid") {
+            order.paidAt = new Date();
+        } else {
+            // clear paidAt when marking Pending/Failed
+            order.paidAt = null;
+        }
+
+        // Save & return
+        const updated = await order.save();
+        return res.status(200).json({
+            message: "Payment status updated",
+            data: updated,
+        });
+    } catch (err) {
+        console.error("Error updating payment status:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

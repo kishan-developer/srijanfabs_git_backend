@@ -91,7 +91,10 @@ const userSchema = new mongoose.Schema(
                 required: true,
             },
         ],
-        cart: cartSchema,
+        cart: {
+            type: cartSchema,
+            default: () => ({}),
+        },
         wishList: [
             {
                 type: mongoose.Schema.Types.ObjectId,
