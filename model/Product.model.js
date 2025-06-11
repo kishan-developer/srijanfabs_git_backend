@@ -70,6 +70,19 @@ const productSchema = new mongoose.Schema(
 );
 // Create Vertualt Key : Rating And calculate
 productSchema.virtual("rating").get(function () {
-    // Calculate the average rating from the reviews
+    if (!this.reviews || this.reviews.length === 0) return 0;
+
+    const sum = this.reviews.reduce((total, review) => {
+        if (typeof review.rating === "number") {
+            return total + review.rating;
+        }
+        return total;
+    }, 0);
+
+    return Math.round((sum / this.reviews.length) * 10) / 10; // Rounded to 1 decimal
 });
+
+productSchema.set("toJSON", { virtuals: true });
+productSchema.set("toObject", { virtuals: true });
+
 module.exports = mongoose.model("Product", productSchema);

@@ -91,6 +91,10 @@ const userSchema = new mongoose.Schema(
                 required: true,
             },
         ],
+        defaultAddress: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Address",
+        },
         cart: {
             type: cartSchema,
             default: () => ({}),

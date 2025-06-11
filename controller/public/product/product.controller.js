@@ -2,7 +2,15 @@ const Product = require("../../../model/Product.model");
 
 const asyncHandler = require("express-async-handler");
 const getAllProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find({}).populate("category").exec();
+    const products = await Product.find({})
+        .populate("category")
+        .populate({
+            path: "reviews",
+            populate: {
+                path: "user",
+                model: "User",
+            },
+        });
     return res.success("Products Fetched Successfully.", products);
 });
 
@@ -11,7 +19,15 @@ const getProductById = asyncHandler(async (req, res) => {
     if (!_id) {
         return res.error("Products Id Are Required", 400);
     }
-    const product = await Product.findById(_id).populate("category").exec();
+    const product = await Product.findById(_id)
+        .populate("category")
+        .populate({
+            path: "reviews",
+            populate: {
+                path: "user",
+                model: "User",
+            },
+        });
     if (!product) {
         return res.error("Product Not Found", 404);
     }
