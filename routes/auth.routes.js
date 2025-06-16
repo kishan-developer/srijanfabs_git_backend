@@ -10,6 +10,7 @@ const {
     logoutUser,
     regenerateToken,
     getUserDetails,
+    resetPassValidateToken,
 } = require("../controller/auth.controller");
 const { isAuthenticated } = require("../middleware/auth.middleware");
 
@@ -26,6 +27,7 @@ router.post("/forgot-password-token", forgotPasswordToken);
 router.put("/change-password", isAuthenticated, changePassword);
 // {domain}/api/v1/auth/forgot-password/:token <- dynamic
 router.put("/forgot-password/:token", forgotPassword);
+router.post("/validate-forgot-password-token/:token", resetPassValidateToken);
 router.post("/logout", isAuthenticated, logoutUser);
 router.post("/regenerate-token", regenerateToken);
 router.get("/user", isAuthenticated, getUserDetails);

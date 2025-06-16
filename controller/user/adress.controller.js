@@ -76,6 +76,7 @@ exports.setDefaultAddress = async (req, res) => {
         const { id } = req.params;
 
         const user = await User.findById(req.user._id);
+
         // check dose provided address id exit or not in shipping adresses of User
         if (!user.shippingAddress.includes(id)) {
             return res
@@ -85,10 +86,10 @@ exports.setDefaultAddress = async (req, res) => {
 
         user.defaultAddress = id;
         await user.save();
-
+        const address = await Address.findById(id);
         res.status(200).json({
             message: "Default address updated",
-            defaultAddress: id,
+            defaultAddress: address,
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

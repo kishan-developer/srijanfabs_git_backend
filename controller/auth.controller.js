@@ -10,6 +10,7 @@ const loginAlertTemplate = require("../email/template/loginAlertTemplate");
 const getCurrentDateTime = require("../utils/getCurrentDateTime");
 const forgotPasswordTemplate = require("../email/template/fogotPasswordTemplate");
 const jwt = require("jsonwebtoken");
+const passwordChangeSuccessTemplate = require("../email/template/passwordChangeSuccessTemplate");
 require("dotenv").config();
 
 const generateTokenAndRefereshTokens = asyncHandler(async (userId) => {
@@ -217,6 +218,11 @@ exports.changePassword = asyncHandler(async (req, res) => {
     // If Not Match Then  Save User Details
     userDetails.password = password;
     await userDetails.save();
+    await mailSender(
+        userDetails?.email,
+        "Srijan Fab | Password Changed Successfully.",
+        passwordChangeSuccessTemplate(`${userDetails.firstName} `)
+    );
     //Send Response
     return res.success("Password Changed Successfully", userDetails);
 });
@@ -242,7 +248,7 @@ exports.forgotPasswordToken = asyncHandler(async (req, res) => {
     };
     await userDetails.save();
     // send email with reset token on email
-    const URL = process.env.FRONTEND_URL + token;
+    const URL = `${process.env.FRONTEND_URL}reset-password/${token} `;
     await mailSender(
         email,
         "Reset Password Link - Srijan Fabs",
@@ -252,7 +258,7 @@ exports.forgotPasswordToken = asyncHandler(async (req, res) => {
     // send success response to admin
 });
 
-// Forgot Password Handler For Handle Passwordd Change By Token
+// Forgot Password Handler For Handle Password Change By Token
 exports.forgotPassword = asyncHandler(async (req, res) => {
     // get password and confirm password and token
     const { token } = req.params;
@@ -310,6 +316,11 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     userDetails.forgotPasswordToken.value = null;
     userDetails.forgotPasswordToken.expiresAt = null;
     await userDetails.save();
+    await mailSender(
+        userDetails?.email,
+        "Srijan Fab | Password Changed Successfully.",
+        passwordChangeSuccessTemplate(`${userDetails.firstName} `)
+    );
     return res.success("Password Changed Successfully.");
 });
 
@@ -338,40 +349,40 @@ exports.logoutUser = asyncHandler(async (req, res) => {
 exports.regenerateToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken =
         req?.cookies?.refreshToken || req?.body?.refreshToken;
-    console.log("incoming refreshToken", incomingRefreshToken);
+
     if (!incomingRefreshToken) {
-        return res.error("unauthorized request", 401);
+        return res.error("Unauthorized request", 401);
     }
 
-    const decodedToken = jwt.verify(
-        incomingRefreshToken,
-        process.env.JWT_REFRESH_TOKEN_SECRET
-    );
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.JWT_REFRESH_TOKEN_SECRET
+        );
 
-    const user = await User.findById(decodedToken?._id);
+        const user = await User.findById(decodedToken?._id);
 
-    if (!user) {
-        return res.error("Invalid refresh token", 401);
+        if (!user) {
+            return res.error("Invalid refresh token", 401);
+        }
+
+        if (incomingRefreshToken !== user?.refreshToken) {
+            return res.error("Refresh token is expired or used", 401);
+        }
+
+        const { token, refreshToken: newRefreshToken } =
+            await generateTokenAndRefereshTokens(user._id);
+
+        res.cookie("token", token, { httpOnly: true, secure: true }).cookie(
+            "refreshToken",
+            newRefreshToken,
+            { httpOnly: true, secure: true }
+        );
+
+        return res.success("Access token refreshed", token);
+    } catch (err) {
+        return res.error("Invalid or expired refresh token", 401);
     }
-
-    if (incomingRefreshToken !== user?.refreshToken) {
-        return res.error("Refresh token is expired or used", 401);
-    }
-
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
-
-    const { token, refreshToken: newRefreshToken } =
-        await generateTokenAndRefereshTokens(user._id);
-
-    res.cookie("token", token, options).cookie(
-        "refreshToken",
-        newRefreshToken,
-        options
-    );
-    return res.success("Access token refreshed", token);
 });
 
 exports.getUserDetails = asyncHandler(async (req, res) => {
@@ -387,4 +398,26 @@ exports.getUserDetails = asyncHandler(async (req, res) => {
         return res.error("Unauthorised Acces User Not Found", 401);
     }
     return res.success("User Fetched Successfully..", userDetails);
+});
+
+exports.resetPassValidateToken = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+
+    if (!token) {
+        return res.error("Reset token is missing", 400);
+    }
+
+    const user = await User.findOne({
+        "forgotPasswordToken.value": token,
+    });
+
+    if (!user) {
+        return res.error("Invalid or expired reset token", 400);
+    }
+
+    if (user.forgotPasswordToken.expiresAt < new Date()) {
+        return res.error("Reset token has expired", 400);
+    }
+
+    return res.success("Reset token is valid");
 });

@@ -1,5 +1,7 @@
 const Order = require("../../model/Order.model");
 const Address = require("../../model/Adress.model");
+const mailSender = require("../../utils/mailSender.utils");
+const orderStatusUpdateTemplate = require("../../email/template/orderStatusUpdateTemplate");
 const getOrders = async (req, res) => {
     try {
         const orders = await Order.find()
@@ -15,16 +17,30 @@ const getOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
+
     try {
         const order = await Order.findByIdAndUpdate(
             id,
             { deliveryStatus: status },
             { new: true }
-        );
+        )
+            .populate("user")
+            .exec();
         if (!order) {
             return res.status(404).json({ message: "Order not found." });
         }
-        res.success("Order Updated Successfully", order);
+        console.log(order.user);
+        await mailSender(
+            order.user?.email,
+            "Your Order Delivery Status Changed",
+
+            orderStatusUpdateTemplate({
+                userName: order.user?.firstName,
+                orderId: order?.razorpay_order_id,
+                newStatus: order.deliveryStatus,
+            })
+        );
+        return res.success("Order Updated Successfully", order);
     } catch (error) {
         res.status(500).json({ message: "Error updating order status." });
     }

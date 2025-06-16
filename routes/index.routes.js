@@ -12,6 +12,10 @@ const {
 const imageUploader = require("../utils/imageUpload.utils");
 const userRoutes = require("./user/index.routes");
 const paymentRoutes = require("./payment.routes");
+const mailSender = require("../utils/mailSender.utils");
+const bookVideoCallTemplate = require("../email/template/bookVideoCallTemplate");
+const bookVideoCallAdminTemplate = require("../email/template/bookVideoCallAdminTemplate");
+const Newsletter = require("../model/Newsletter.model");
 
 const router = express.Router();
 router.use("/auth", authRoutes);
@@ -41,4 +45,86 @@ router.post("/upload", async (req, res) => {
     const result = await imageUploader(images);
     return res.success("Images Uploaded Successfully", result);
 });
+router.post("/bookVideoCall", async (req, res) => {
+    const { email, body } = req.body;
+    console.log(body);
+
+    if (!body) {
+        // Use res.status() and res.json() for error responses
+        return res.status(400).json({
+            success: false,
+            message: "All fields are required.",
+        });
+    }
+
+    try {
+        const usertemplate = bookVideoCallTemplate(
+            body?.fullName,
+            body?.date,
+            body?.time
+        );
+        const admintemplate = bookVideoCallAdminTemplate(
+            body?.fullName,
+            body?.email,
+            body?.phone,
+            body?.date,
+            body?.time,
+            "None"
+        );
+
+        // Renamed 'res' variable to avoid conflict with the Express 'res' object
+        const userMailResponse = await mailSender(
+            email,
+            "Video Call Book, Confirmation",
+            usertemplate
+        ); // send to user
+
+        const adminMailResponse = await mailSender(
+            "krishnarajbhar767@gmail.com",
+            "New Video Call Book",
+            admintemplate
+        ); // send to Admin
+
+        // Use res.status() and res.json() for success responses
+        return res.status(200).json({
+            success: true,
+            message: "Video Call Booked Successfully",
+            data: { userMailResponse, adminMailResponse },
+        });
+    } catch (error) {
+        console.log(error);
+        // Use res.status() and res.json() for error responses
+        return res.status(500).json({
+            success: false,
+            message: "Failed to book video call",
+        });
+    }
+});
+
+router.post("/newsletter", async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.error("Please enter a valid email address", 400);
+    }
+
+    try {
+        const exists = await Newsletter.findOne({ email });
+
+        if (exists) {
+            return res.error(
+                "You are already subscribed to the newsletter.",
+                409
+            );
+        }
+
+        await Newsletter.create({ email });
+
+        return res.success("Successfully subscribed to the newsletter!");
+    } catch (err) {
+        console.error("Newsletter Error:", err);
+        return res.error("Something went wrong. Please try again later.", 500);
+    }
+});
+
 module.exports = router;

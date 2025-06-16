@@ -73,6 +73,12 @@ const createProduct = asyncHandler(async (req, res) => {
     // create new product
     const product = await Product.create(productPayload);
     const allProducts = await Product.find({});
+    const allCategory = await Category.findOneAndUpdate(
+        { name: "all" },
+        {
+            $push: { products: product._id },
+        }
+    );
     const updatedCategory = await Category.findByIdAndUpdate(category, {
         $push: { products: product._id },
     });
