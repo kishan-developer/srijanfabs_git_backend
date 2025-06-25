@@ -72,7 +72,7 @@ const createProduct = asyncHandler(async (req, res) => {
     };
     // create new product
     const product = await Product.create(productPayload);
-    const allProducts = await Product.find({});
+    const allProducts = await Product.find({ });
     const allCategory = await Category.findOneAndUpdate(
         { name: "all" },
         {
@@ -84,6 +84,7 @@ const createProduct = asyncHandler(async (req, res) => {
     });
     return res.success("Product Created Successfully.", allProducts);
 });
+
 const updateProduct = asyncHandler(async (req, res) => {
     // get product data
     const _id = req.params?.id || req.body?.id;
@@ -132,7 +133,6 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 module.exports = {
     createProduct,
-
     updateProduct,
     deleteProduct,
 };

@@ -18,10 +18,12 @@ const router = require("./routes/index.routes");
 // Connect Database
 connectDB(); // connect Database
 connectCloudinary(); // connect cloudinary
+
 const app = express();
 app.use(cookieParser());
 const allowedOrigins = [
     "http://localhost:5173",
+    "http://192.168.1.26:5555",
     "https://shreejan-fab-frontend.vercel.app",
 ];
 
@@ -40,7 +42,7 @@ app.use(
                 callback(new Error("Not allowed by CORS"));
             }
         },
-        credentials: true,
+        credentials: true, 
     })
 );
 // Limit repeated requests (rate limiting)
@@ -55,11 +57,15 @@ app.use(
         useTempFiles: true,
         tempFileDir: "/tmp",
     })
-); //
+); 
+
 app.use(sendCustomResponse);
-// Routes For Login,Register,Send-Otp,Forgott-Password, Reset Password
+// Routes For Login, Register, Send-Otp, Forgott-Password, Reset Password
+
+// Stating from this route localhost:8000/api/v1/auth/register
 app.use("/api/v1", router);
 
+// 
 app.get("/", (req, res) => {
     return res.success("Welcome! Test route is working");
 });

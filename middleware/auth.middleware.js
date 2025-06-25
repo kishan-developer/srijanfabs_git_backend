@@ -2,12 +2,14 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const User = require("../model/User.model");
 require("dotenv").config();
+
 // Middleware for Check is user authenticated or not ?
 exports.isAuthenticated = asyncHandler(async (req, res, next) => {
-    const token =
+    const token =  
         req.cookies?.token ||
         req.body?.token ||
         req.header("Authorization")?.replace("Bearer ", "");
+
     // If Not Token Then Unauthorised
     if (!token) {
         return res.error("Token Missing", 401);
@@ -24,7 +26,7 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        console.log(error.message);
+        console.log('Error From Auth MiddleWare.',error.message);
         return res.error("Something Went Wrong !", 401);
     }
 
@@ -64,6 +66,7 @@ exports.isAdmin = asyncHandler(async (req, res, next) => {
 
 // Middleware for check is user is Customer(user) Or someone else if Customer(user) then go to next controller
 exports.isUser = asyncHandler(async (req, res, next) => {
+
     const user = req?.user ?? null;
 
     // Step 1: Check if token attached user info

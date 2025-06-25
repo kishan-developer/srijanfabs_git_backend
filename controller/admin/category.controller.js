@@ -2,7 +2,9 @@ const asyncHandler = require("express-async-handler");
 const Category = require("../../model/Category.model");
 const sanitizePayload = require("../../utils/sanitizePayload");
 const { CATEGORY_ALLOWED_FIELDS } = require("../../constants/constants");
+
 const createCategory = asyncHandler(async (req, res) => {
+    
     // get data from body;
     const { name, description } = req.body;
 

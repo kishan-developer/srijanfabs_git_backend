@@ -1,11 +1,25 @@
-const { razorpayInstance } = require("../config/razorpay");
+const razorpayInstance = require("../utils/razorpayInstance");
+
 const Payment = require("./../model/Payment.model");
 const crypto = require("crypto");
 const Order = require("../model/Order.model");
 
 exports.checkoutHandler = async (req, res) => {
     try {
+        // console.log("razorpayInstance typeof", typeof razorpayInstance);
+        // console.log("razorpayInstance.orders", razorpayInstance.orders);
+        // console.log("razorpayInstance", razorpayInstance);
+
+        // console.log("req.body", req.body);
+        // take everything from razorpay
         const { amount, userId, items, addressId, paymentMethod } = req.body;
+
+        if (!amount || !userId || !items || !addressId || !paymentMethod) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields",
+            });
+        }
 
         // 1. Create Razorpay order
         const razorpayOrder = await razorpayInstance.orders.create({
@@ -29,10 +43,11 @@ exports.checkoutHandler = async (req, res) => {
             orderId: order._id,
         });
     } catch (error) {
-        console.log(error);
+        console.error(" Checkout Error:", error);
         return res.status(500).json({
             success: false,
-            message: error.message,
+            message: "Something went wrong while creating the order",
+            error: error.message,
         });
     }
 };
@@ -84,7 +99,7 @@ exports.paymentVerificationHandler = async (req, res) => {
                 `${process.env.FRONTEND_URL}/paymentSuccess?reference=${razorpay_payment_id}`
             );
         } else {
-            // ❌ Invalid signature — possible fraud
+            // Invalid signature — possible fraud
             return res.redirect(
                 `${process.env.FRONTEND_URL}/paymentFailed?reason=Invalid signature`
             );
@@ -93,8 +108,7 @@ exports.paymentVerificationHandler = async (req, res) => {
         console.error("Error in payment verification:", error);
 
         return res.redirect(
-            `${
-                process.env.FRONTEND_URL
+            `${process.env.FRONTEND_URL
             }/paymentFailed?reason=${encodeURIComponent(error.message)}`
         );
     }
@@ -109,6 +123,7 @@ exports.updatePaymentStatus = async (req, res) => {
         if (!["Pending", "Paid", "Failed"].includes(paymentStatus)) {
             return res.status(400).json({ message: "Invalid payment status" });
         }
+
 
         // Find order
         const order = await Order.findById(id);

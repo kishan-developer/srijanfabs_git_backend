@@ -73,11 +73,14 @@ exports.registerUser = asyncHandler(async (req, res) => {
     }
     // 409 Conflict – User already exists
     const isUserAlreadyExist = await User.findOne({ email });
+
     if (isUserAlreadyExist) {
         return res.error("User already exists.", 409);
     }
+
     // 404 Not Found – OTP record not found (expired or never generated)
     const otpRecord = await OTP.findOne({ email });
+
     if (!otpRecord) {
         return res.error(
             "OTP record not found (expired or never generated)",
@@ -101,6 +104,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
 
     // Save new user
     const newUser = await User.create(userPayload);
+    // newUser.save();
     // Send registration success email
     await mailSender(
         newUser.email,
@@ -113,7 +117,11 @@ exports.registerUser = asyncHandler(async (req, res) => {
 });
 
 // User Login Handler
+
 exports.login = asyncHandler(async (req, res) => {
+
+    console.log("req.body", req.body)
+
     const { password } = req.body;
     const email = req.body?.email.trim().toLowerCase();
 
@@ -121,11 +129,14 @@ exports.login = asyncHandler(async (req, res) => {
     if (!email || !password) {
         return res.error("All Field Are Required.", 400);
     }
+
     // Check Is User Exit Or Not
     const user = await User.findOne({ email });
+
     if (!user) {
         return res.error("User Dose Not Exit!");
     }
+
     // Check Is User Password Are Same Or Not ?
     // ---> Compare User Password And  Input Password By bcrypt
     const isPasswordMatch = await bcrypt.compare(password, user.password);
@@ -133,6 +144,7 @@ exports.login = asyncHandler(async (req, res) => {
     if (!isPasswordMatch) {
         return res.error("Password dose not match", 403);
     }
+
     // Generate Token For User
     const { token, refreshToken } = await generateTokenAndRefereshTokens(
         user._id
@@ -140,6 +152,7 @@ exports.login = asyncHandler(async (req, res) => {
 
     // send login alert to user
     const session = getSessionDetails(req);
+
     await mailSender(
         user.email,
         "Alert: A New Login Was Detected on Your Account",
@@ -155,15 +168,26 @@ exports.login = asyncHandler(async (req, res) => {
     delete userData.password; // Don't expose hashed password
     delete userData.__v;
     delete userData.refreshToken;
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
-    res.cookie("token", token, options).cookie(
-        "refreshToken",
-        refreshToken,
-        options
-    );
+//     const options = {
+//         httpOnly: true,
+//      secure: false,        // ✅ for localhost
+//   sameSite: "Lax",      // ✅ for localhost
+//     };
+   
+const isProduction = process.env.NODE_ENV === "production";
+
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: isProduction, // true on production, false on localhost
+  sameSite: isProduction ? "None" : "Lax", // "None" needed for cross-origin
+});
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "None" : "Lax",
+});
+
+
     return res.success(`Welcome ${user.firstName}`, {
         user: userData,
         token,
@@ -324,34 +348,64 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     return res.success("Password Changed Successfully.");
 });
 
-exports.logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1, // this removes the field from document
-            },
-        },
-        {
-            new: true,
-        }
-    );
+// exports.logoutUser = async (req, res) => {
+//     try {
+//         console.log('Logout Api ->', req.user)
+//         await User.findByIdAndUpdate(
+//             req.user._id,
+//             {
+//                 $unset: {
+//                     refreshToken: 1, // this removes the field from document
+//                 },
+//             },
+//             {
+//                 new: true,
+//             }
+//         );
 
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
+//         const options = {
+//             httpOnly: true,
+//             secure: true,
+//         };
 
-    res.clearCookie("token", options).clearCookie("refreshToken", options);
-    return res.success("User logged Out");
-});
+//         res.clearCookie("token", options).clearCookie("refreshToken", options);
+//         return res.success("User logged Out");
+//     } catch (error) {
+//         console.log('Error While Logout', error)
+//         return res.status(500).json({
+//             error
+//         })
+//     }
+// };
+exports.logoutUser = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (refreshToken) {
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+      await User.findByIdAndUpdate(decoded._id, {
+        $unset: { refreshToken: 1 },
+      });
+    }
+
+    res.clearCookie("token", { httpOnly: true, secure: false });
+    res.clearCookie("refreshToken", { httpOnly: true, secure: false });
+
+    return res.success("User logged out");
+  } catch (error) {
+    console.log("Logout error:", error.message);
+    return res.success("Logged out"); // still success, even if error
+  }
+};
+
 
 exports.regenerateToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken =
-        req?.cookies?.refreshToken || req?.body?.refreshToken;
-
+       req?.cookies?.refreshToken
+    console.log('Refresh token ->', incomingRefreshToken)
+    console.log('Refresh token API Cookies->', req.cookies);
     if (!incomingRefreshToken) {
-        return res.error("Unauthorized request", 401);
+        return res.error("Unauthorized request", 400);
     }
 
     try {
@@ -363,11 +417,11 @@ exports.regenerateToken = asyncHandler(async (req, res) => {
         const user = await User.findById(decodedToken?._id);
 
         if (!user) {
-            return res.error("Invalid refresh token", 401);
+            return res.error("Invalid refresh token", 400);
         }
 
         if (incomingRefreshToken !== user?.refreshToken) {
-            return res.error("Refresh token is expired or used", 401);
+            return res.error("Refresh token is expired or used...", 400);
         }
 
         const { token, refreshToken: newRefreshToken } =
@@ -381,7 +435,7 @@ exports.regenerateToken = asyncHandler(async (req, res) => {
 
         return res.success("Access token refreshed", token);
     } catch (err) {
-        return res.error("Invalid or expired refresh token", 401);
+        return res.error("Invalid or expired refresh token", 400);
     }
 });
 

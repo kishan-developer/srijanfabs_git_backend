@@ -18,6 +18,7 @@ const bookVideoCallAdminTemplate = require("../email/template/bookVideoCallAdmin
 const Newsletter = require("../model/Newsletter.model");
 
 const router = express.Router();
+
 router.use("/auth", authRoutes);
 router.use("/admin", adminRoutes);
 router.use("/user", userRoutes);
@@ -29,22 +30,49 @@ router.get("/products/:id", getProductById);
 // Categories
 router.get("/categories", getAllCategories);
 router.get("/categories/:id", getCategoryById);
+
 // Upload ->
+// router.post("/upload", async (req, res) => {
+
+//     console.log("req.files", req.files)
+//     const images = req.files?.files ?? null;
+//     if (!images) {
+//         return res.error("Please Upload File First", 400);
+//     }
+//     if (Array.isArray(images)) {
+//         for (const image of images) {
+//             if (image.size > 20 * 1024 * 1024) {
+//                 return res.error("Image should not be larger than 20MB", 400);
+//             }
+//         }
+//     }
+//     const result = await imageUploader(images);
+//     return res.success("Images Uploaded Successfully", result);
+// });
+
 router.post("/upload", async (req, res) => {
-    const images = req.files?.files ?? null;
-    if (!images) {
-        return res.error("Please Upload File First", 400);
+    const files = req.files?.files;
+
+    if (!files) {
+        return res.error("Please upload file(s) first", 400);
     }
-    if (Array.isArray(images)) {
-        for (const image of images) {
-            if (image.size > 10 * 1024 * 1024) {
-                return res.error("Image should not be larger than 10MB", 400);
-            }
+
+    // Always work with an array, even if 1 file is uploaded
+    const images = Array.isArray(files) ? files : [files];
+
+    // Validate size for each image (20MB limit)
+    for (const image of images) {
+        if (image.size > 20 * 1024 * 1024) {
+            return res.error("Each image should not be larger than 20MB", 400);
         }
     }
+
     const result = await imageUploader(images);
-    return res.success("Images Uploaded Successfully", result);
+    return res.success("Images uploaded successfully", result);
 });
+
+
+
 router.post("/bookVideoCall", async (req, res) => {
     const { email, body } = req.body;
     console.log(body);
@@ -101,6 +129,7 @@ router.post("/bookVideoCall", async (req, res) => {
     }
 });
 
+
 router.post("/newsletter", async (req, res) => {
     const { email } = req.body;
 
@@ -126,5 +155,6 @@ router.post("/newsletter", async (req, res) => {
         return res.error("Something went wrong. Please try again later.", 500);
     }
 });
+
 
 module.exports = router;
