@@ -21,10 +21,15 @@ const cartSchema = new mongoose.Schema({
                 required: true,
                 default: 0,
             },
-            withCustomization: {
-                type: Boolean,
-                required: true,
-                default: false,
+            addons: {
+                withFallPico: {
+                    type: Boolean,
+                    default: false,
+                },
+                withTassels: {
+                    type: Boolean,
+                    default: false,
+                },
             },
             totalPrice: {
                 type: Number,

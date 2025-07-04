@@ -6,7 +6,14 @@ const mongoose = require("mongoose");
 exports.addAddress = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { street, city, state, postalCode, country, phone } = req?.body;
+        const {
+            street,
+            city,
+            state,
+            postalCode,
+            country = "India",
+            phone,
+        } = req?.body;
 
         // Validate required fields
         if (!street || !city || !state || !postalCode || !country || !phone) {

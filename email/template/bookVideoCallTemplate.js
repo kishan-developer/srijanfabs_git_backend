@@ -102,11 +102,11 @@ function bookVideoCallTemplate(
           <div class="footer">
             <div class="contact-info">
               <i class="fa-solid fa-envelope"></i>
-              <a href="mailto:support@SrijanFabs.com">support@SrijanFabs.com</a>
+              <a href="mailto:srijanfabs@gmail.com">srijanfabs@gmail.com</a>
             </div>
             <div class="contact-info">
               <i class="fa-solid fa-phone"></i>
-              +91 98765 43210
+              +91 89605 00991
             </div>
             <p>© ${new Date().getFullYear()} Srijan Fabs. All rights reserved.</p>
           </div>

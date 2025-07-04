@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema(
+const tempOrderSchema = new mongoose.Schema(
     {
         razorpay_order_id: {
             type: String,
@@ -62,8 +62,15 @@ const orderSchema = new mongoose.Schema(
             default: "Pending",
         },
         totalAmount: Number,
+
+        //  TTL field
+        createdAt: {
+            type: Date,
+            default: Date.now,
+            expires: 300, // auto-delete after 5 minutes (300 seconds)
+        },
     },
     { timestamps: true }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports = mongoose.model("TempOrder", tempOrderSchema);

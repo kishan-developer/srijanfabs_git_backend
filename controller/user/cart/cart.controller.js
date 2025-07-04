@@ -27,7 +27,10 @@ exports.getCart = async (req, res) => {
             return {
                 ...product,
                 quantity: item.quantity,
-                withCustomization: item.withCustomization,
+                addons: {
+                    withFallPico: item.addons.withFallPico,
+                    withTassels: item.addons.withTassels,
+                },
                 finalPrice: item.finalPrice,
                 totalPrice: item.totalPrice,
             };
@@ -48,14 +51,8 @@ exports.getCart = async (req, res) => {
 // ------------------------
 // cartRouter.post("/add" );
 exports.addToCart = async (req, res) => {
-    const {
-        userId,
-        product,
-        quantity = 1,
-        withCustomization = false,
-        finalPrice,
-    } = req.body;
-
+    const { userId, product, quantity = 1, addons, finalPrice } = req.body;
+    console.log(req.body);
     try {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -66,7 +63,8 @@ exports.addToCart = async (req, res) => {
         const existingItem = user.cart.items.find(
             (item) =>
                 item.product.toString() === product &&
-                item.withCustomization === withCustomization
+                item.addons.withFallPico === addons.withFallPico &&
+                item.addons.withTassels === addons.withTassels
         );
 
         if (existingItem) {
@@ -77,7 +75,7 @@ exports.addToCart = async (req, res) => {
                 product,
                 quantity,
                 finalPrice,
-                withCustomization,
+                addons,
                 totalPrice,
             });
         }
@@ -102,7 +100,7 @@ exports.addToCart = async (req, res) => {
                 finalPrice: item.finalPrice,
                 quantity: item.quantity,
                 totalPrice: item.totalPrice,
-                withCustomization: item.withCustomization,
+                addons: item.addons,
             };
         });
         res.status(200).json(flattenedCartItems);
@@ -172,9 +170,7 @@ exports.mergeCart = async (req, res) => {
 
         for (const localItem of localCartItems) {
             const existing = cart.items.find(
-                (item) =>
-                    item.product.toString() === localItem._id &&
-                    item.withCustomization === localItem.withCustomization
+                (item) => item.product.toString() === localItem._id
             );
 
             const quantity = localItem.quantity || 1;
@@ -189,7 +185,10 @@ exports.mergeCart = async (req, res) => {
                     product: localItem._id,
                     quantity,
                     finalPrice,
-                    withCustomization: localItem.withCustomization || false,
+                    addons: {
+                        withFallPico: localItem.withFallPico,
+                        withTassels: localItem.withTassels,
+                    },
                     totalPrice,
                 });
             }
@@ -212,8 +211,9 @@ exports.mergeCart = async (req, res) => {
 };
 
 exports.updateQuantity = async (req, res) => {
-    const { userId, productId, withCustomization, type } = req.body;
+    const { userId, productId, withFallPico, withTassels, type } = req.body;
     console.log("TYPE OF CHANGE ->", type);
+    console.log(withFallPico, withTassels);
     if (!userId || !productId || !type)
         return res.status(400).json({ message: "Missing required fields" });
 
@@ -228,7 +228,8 @@ exports.updateQuantity = async (req, res) => {
         const item = cart.items.find(
             (i) =>
                 i.product.toString() === productId &&
-                i.withCustomization === withCustomization
+                i.addons.withFallPico === withFallPico &&
+                i.addons.withTassels === withTassels
         );
 
         if (!item)

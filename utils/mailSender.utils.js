@@ -6,8 +6,8 @@ const mailSender = async (email, title, body) => {
             host: "smtp.gmail.com",
             port: 587,
             auth: {
-                user: "krishnarajbhar767@gmail.com",
-                pass: "ziqymaxkafusntte",
+                user: "srijanfabs@gmail.com",
+                pass: "qawmyidiriyhnpit",
             },
         });
 

@@ -118,7 +118,7 @@ function orderStatusUpdateTemplate({
 
         <!-- Footer -->
         <div class="footer">
-          <p>Need help? <a href="mailto:support@SrijanFabs.com">Contact Support</a></p>
+          <p>Need help? <a href="mailto:srijanfabs@gmail.com">Contact Support</a></p>
           <p>© ${new Date().getFullYear()} Srijan Fabs. All rights reserved.</p>
         </div>
       </div>

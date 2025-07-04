@@ -16,6 +16,7 @@ const mailSender = require("../utils/mailSender.utils");
 const bookVideoCallTemplate = require("../email/template/bookVideoCallTemplate");
 const bookVideoCallAdminTemplate = require("../email/template/bookVideoCallAdminTemplate");
 const Newsletter = require("../model/Newsletter.model");
+const contactEmailTemplate = require("../email/template/contactEmailTemplate");
 
 const router = express.Router();
 
@@ -71,11 +72,8 @@ router.post("/upload", async (req, res) => {
     return res.success("Images uploaded successfully", result);
 });
 
-
-
 router.post("/bookVideoCall", async (req, res) => {
     const { email, body } = req.body;
-    console.log(body);
 
     if (!body) {
         // Use res.status() and res.json() for error responses
@@ -108,7 +106,7 @@ router.post("/bookVideoCall", async (req, res) => {
         ); // send to user
 
         const adminMailResponse = await mailSender(
-            "krishnarajbhar767@gmail.com",
+            "srijanfabs@gmail.com",
             "New Video Call Book",
             admintemplate
         ); // send to Admin
@@ -128,7 +126,6 @@ router.post("/bookVideoCall", async (req, res) => {
         });
     }
 });
-
 
 router.post("/newsletter", async (req, res) => {
     const { email } = req.body;
@@ -156,5 +153,47 @@ router.post("/newsletter", async (req, res) => {
     }
 });
 
+// POST /api/contact
+router.post("/contact", async (req, res) => {
+    const { name, email, phone, subject, message } = req.body;
+
+    // Basic validation
+    if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const htmlBody = contactEmailTemplate({
+            name,
+            email,
+            phone,
+            subject,
+            message,
+        });
+
+        // Send mail to admin
+        await mailSender(
+            "srijanfabs@gmail.com",
+            `Contact Us: ${subject}`,
+            htmlBody
+        );
+
+        //  send a confirmation to user
+        const userBody = `
+      Hi ${name},<br/><br/>
+      Thanks for reaching out! We've received your message and will get back to you shortly.<br/><br/>
+      Regards,<br/>Srijan Fabs Team
+    `;
+        await mailSender(email, "We received your message!", userBody);
+
+        return res.json({
+            success: true,
+            message: "Message sent successfully.",
+        });
+    } catch (err) {
+        console.error("Contact POST error:", err);
+        return res.status(500).json({ error: "Failed to send message." });
+    }
+});
 
 module.exports = router;
