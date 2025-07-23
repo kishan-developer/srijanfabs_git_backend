@@ -26,8 +26,7 @@ app.use(compression());
 app.use(cookieParser());
 
 const allowedOrigins = [
-    "https://srijanfabs.in",
-    "https://srijanfabs.com
+    "https://srijanfabs.in"
 ];
 
 app.use(express.json());
