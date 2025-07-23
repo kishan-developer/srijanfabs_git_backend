@@ -36,11 +36,43 @@ const getProductById = asyncHandler(async (req, res) => {
     return res.success("Product Fetched Successfully", product);
 });
 
+
+
+// const getProductByfabric = async (req, res) => {
+//     try {
+//         console.log(req.params);
+//         const { fabric, id } = req.params;
+//         const title = fabric;
+//         if (!title) {
+//             return res
+//                 .status(400)
+//                 .json({ success: false, message: "Fabric title is required" });
+//         }
+
+//         const products = await Product.find().populate("fabric").lean();
+
+//         const filteredProducts = products.filter(
+//             (product) =>
+//                 product.fabric?.title?.toLowerCase() === title.toLowerCase()
+//         );
+
+//         res.json({
+//             success: true,
+//             data: filteredProducts,
+//         });
+//     } catch (err) {
+//         console.error("Error:", err);
+//         res.status(500).json({ success: false, message: "Server Error" });
+//     }
+// };
+
+
+
 const getProductByfabric = async (req, res) => {
     try {
         console.log(req.params);
         const { fabric, id } = req.params;
-        const title = fabric;
+        const title = fabric.replace(/-/g, " ");
         if (!title) {
             return res
                 .status(400)
@@ -60,7 +92,11 @@ const getProductByfabric = async (req, res) => {
         });
     } catch (err) {
         console.error("Error:", err);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
 };
+
+
+
+
 module.exports = { getAllProducts, getProductById, getProductByfabric };
