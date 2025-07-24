@@ -19,7 +19,7 @@ const {
 
 
 const connectCloudinary = require("./config/cloudinary");
-const imageUploader = require("./utils/imageUpload.utils");
+const imageUploader = require("./utils/imageUpload.utils.js");
 const uploadRoutes = require("./routes/admin/upload.routes");
 const router = require("./routes/index.routes");
 
