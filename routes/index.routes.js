@@ -11,7 +11,7 @@ const {
     getCategoryById,
 } = require("../controller/public/product/category.controller");
 
-const deleteFromS3 = require("../utils/deleteFromS3.utils");
+
 const imageUploader = require("../utils/imageUpload.utils");
 
 const userRoutes = require("./user/index.routes");
