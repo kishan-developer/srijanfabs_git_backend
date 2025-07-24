@@ -1,71 +1,43 @@
-const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
+const path = require("path");
 
-// const imageUploader = async (file, folder, height, quality) => {
-//     console.log("folder ", file)
-//     const options = { folder };
-//     if (height) options.height = height;
+const imageUploader = async (file, imageFileName) => {
+    const folder = "uploads/products";
+    const uploadPath = path.join(__dirname, "..", folder);
 
-//     if (quality) options.quality = quality;
+    if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+    }
 
-//     options.resource_type = "auto";
-//     if (Array.isArray(file)) {
-//         let uploadedFiles = [];
-//         // If File is Arrat That Mean There Was Multiple File. Then Upload All Files
-//         for (const item of file) {
-//             const res = await cloudinary.uploader.upload(
-//                 item.tempFilePath,
-//                 options
-//             );
-//             uploadedFiles.push(res.secure_url);
-//         }
-//         return uploadedFiles;
-//     }
+    // Helper to move a file
+    const moveFile = (fileObj) => {
+        return new Promise((resolve, reject) => {
+            const ext = path.extname(fileObj.name);
+            const fileName = `${imageFileName + "-" + Date.now()}-${Math.floor(
+                Math.random() * 1e9
+            )}${ext}`;
+            const filePath = path.join(uploadPath, fileName);
 
-//     const result = await cloudinary.uploader.upload(file.tempFilePath, options);
-//     return result.secure_url;
-// };
-
-
-
-const imageUploader = async (files, folder, height, quality) => {
-    const options = {
-        folder,
-        resource_type: "auto",
+            fileObj.mv(filePath, (err) => {
+                if (err) return reject(err);
+                resolve(
+                    `${process.env.BACKEND_URL}/uploads/products/${fileName}`
+                ); // Public URL path
+            });
+        });
     };
 
-    if (height) options.height = height;
-    if (quality) options.quality = quality;
-
-    // If multiple files
-    if (Array.isArray(files)) {
+    if (Array.isArray(file)) {
         const uploadedFiles = [];
-
-        for (const file of files) {
-            if (!file?.tempFilePath) continue; // Skip if tempFilePath missing
-
-            const uploadRes = await cloudinary.uploader.upload(
-                file.tempFilePath,
-                options
-            );
-
-            uploadedFiles.push(uploadRes.secure_url);
+        for (const item of file) {
+            const savedPath = await moveFile(item);
+            uploadedFiles.push(savedPath);
         }
-
         return uploadedFiles;
     }
 
-    // If single file
-    if (files?.tempFilePath) {
-        const result = await cloudinary.uploader.upload(
-            files.tempFilePath,
-            options
-        );
-        return result.secure_url;
-    }
-
-    // If no valid file
-    throw new Error("No valid file provided for upload.");
+    const singlePath = await moveFile(file);
+    return singlePath;
 };
-
 
 module.exports = imageUploader;
