@@ -18,14 +18,14 @@ const {
 } = require("./middleware/globalErrorHandler.middleware");
 
 
-const connectCloudinary = require("./config/cloudinary");
-const imageUploader = require("./utils/imageUpload.utils.js");
-const uploadRoutes = require("./routes/admin/upload.routes");
+// const connectCloudinary = require("./config/cloudinary");
+// const imageUploader = require("./utils/imageUpload.utils.js");
+// const uploadRoutes = require("./routes/admin/upload.routes");
 const router = require("./routes/index.routes");
 
 // Connect Database
 connectDB(); // connect Database
-connectCloudinary(); // connect cloudinary
+// connectCloudinary(); // connect cloudinary
 
 const app = express();
 
