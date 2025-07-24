@@ -4,37 +4,53 @@ const fileUplaod = require("express-fileupload");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
-
+const path = require("path");
 const ratelimit = require("./middleware/rateLimit.middleware");
 const notFound = require("./middleware/notFound.middleware");
 const sendCustomResponse = require("./middleware/customResponse.middleware");
 const connectDB = require("./config/connectDb");
 require("dotenv").config();
+
+const { connectRedis } = require("./utils/redisClient.js");
+
 const {
     globalErrorHandler,
 } = require("./middleware/globalErrorHandler.middleware");
+
+
 const connectCloudinary = require("./config/cloudinary");
 const imageUploader = require("./utils/imageUpload.utils");
+const uploadRoutes = require("./routes/admin/upload.routes");
 const router = require("./routes/index.routes");
+
 // Connect Database
 connectDB(); // connect Database
 connectCloudinary(); // connect cloudinary
 
 const app = express();
+
+// connectRedis();
+
+// increase api response
+// const client = await createClient()
+//     .on('error', (err)=> console.log('Redis Client Error', err))
+//     .connect();
+
+
 // use compresstion
 app.use(compression());
 app.use(cookieParser());
-
-const allowedOrigins = [
-    "https://srijanfabs.in"
-];
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const allowedOrigins = ["https://srijanfabs.com", "http://localhost:5173"];
 
 app.use(express.json());
+
 app.use(
     express.urlencoded({
         extended: true,
     })
 );
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -47,10 +63,13 @@ app.use(
         credentials: true,
     })
 );
+
 // Limit repeated requests (rate limiting)
 // app.use(ratelimit);
+
 // Secure HTTP headers to protect your app
 app.use(helmet());
+
 // Sanitize input to prevent NoSQL injection attacks
 
 // Handle file uploads, with temporary storage for large files
@@ -67,15 +86,15 @@ app.use(sendCustomResponse);
 // Stating from this route localhost:8000/api/v1/auth/register
 app.use("/api/v1", router);
 
-//
 app.get("/", (req, res) => {
-    return res.success("Welcome! Test route is working");
+    res.send("Welcome to the API root");
 });
 
 app.use(notFound);
 app.use(globalErrorHandler);
-const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+const PORT = process.env.PORT || 5679;
+
+app.listen(PORT, (err) => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
