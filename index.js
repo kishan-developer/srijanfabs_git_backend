@@ -11,7 +11,7 @@ const sendCustomResponse = require("./middleware/customResponse.middleware");
 const connectDB = require("./config/connectDb");
 require("dotenv").config();
 
-// const { connectRedis } = require("./utils/redisClient.js");
+
 
 const {
     globalErrorHandler,
